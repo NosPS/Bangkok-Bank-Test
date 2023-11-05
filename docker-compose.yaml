@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  postgres:
+    container_name: database
+    image: postgres:16.0
+    restart: always
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+  client:
+    restart: always
+    container_name: client
+    build:
+      context: client
+    ports:
+      - "8080:8080"
+  service:
+    restart: always
+    container_name: service
+    build:
+      context: service
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./service/.env
+volumes:
+  postgres:
