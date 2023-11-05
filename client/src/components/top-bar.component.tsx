@@ -6,23 +6,20 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
+import { useLocation } from "react-router-dom";
+import useApi from "../redux/apis/api";
+import { useDispatch } from "react-redux";
+import { setIsOpenDrawer, setSuccess } from "../redux/features/global.slice";
 import PersonIcon from "@mui/icons-material/Person";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
-import {
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  SwipeableDrawer,
-} from "@mui/material";
-import { useLocation, useNavigate } from "react-router-dom";
+import SuccessModel from "../redux/models/success.model";
 
 function TopBar() {
-  const [open, setOpen] = React.useState(false);
   const [pageName, setPageName] = React.useState("");
 
   const location = useLocation();
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const api = useApi();
 
   React.useEffect(() => {
     if (location.pathname.startsWith("/users")) {
@@ -31,6 +28,22 @@ function TopBar() {
       setPageName("Posts");
     }
   }, [location.pathname]);
+
+  const logIn = () => {
+    api.loginApi(dispatch);
+  };
+
+  const logOut = () => {
+    localStorage.clear();
+    dispatch(
+      setSuccess(
+        new SuccessModel({
+          status: true,
+          message: "Logout success",
+        })
+      )
+    );
+  };
 
   const toggleDrawer =
     (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -43,40 +56,17 @@ function TopBar() {
         return;
       }
 
-      setOpen(open);
+      dispatch(setIsOpenDrawer(open));
     };
 
-  const list = () => (
-    <Box
-      role="presentation"
-      onClick={toggleDrawer(false)}
-      onKeyDown={toggleDrawer(false)}
-    >
-      <List>
-        {["Users", "Posts"].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton
-              onClick={() => {
-                navigate(`/${text.toLowerCase()}`);
-              }}
-            >
-              {index === 0 && <PersonIcon className="icon-drawer-button" />}
-              {index === 1 && (
-                <LocalPostOfficeIcon className="icon-drawer-button" />
-              )}
-              <ListItemText primary={text} sx={{ marginRight: "3rem" }} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Box>
-  );
-
   return (
-    <Box sx={{ flexGrow: 1, gridArea: 'top' }}>
+    <Box sx={{ flexGrow: 1, gridArea: "top" }}>
       <AppBar
         position="fixed"
-        sx={{ backgroundImage: "linear-gradient(to right, #28bf7e, #FFD306, #28bf7e)", color: "#1b1c1c" }}
+        sx={{
+          backgroundImage: "linear-gradient(to right, #FFD306, #28bf7e)",
+          color: "#1b1c1c",
+        }}
       >
         <Toolbar>
           <IconButton
@@ -89,18 +79,25 @@ function TopBar() {
           >
             <MenuIcon />
           </IconButton>
-          <SwipeableDrawer
-            anchor={"left"}
-            open={open}
-            onClose={toggleDrawer(false)}
-            onOpen={toggleDrawer(true)}
+          <div
+            style={{
+              flexGrow: 1,
+              display: "inline-flex",
+              alignItems: "center",
+            }}
           >
-            {list()}
-          </SwipeableDrawer>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {pageName}
-          </Typography>
-          <Button color="inherit">Login</Button>
+            {pageName === "Users" && <PersonIcon />}
+            {pageName === "Posts" && <LocalPostOfficeIcon />}
+            <Typography variant="h6" component="div" sx={{ marginLeft: "5px" }}>
+              {pageName}
+            </Typography>
+          </div>
+          <Button color="inherit" onClick={logIn}>
+            Login
+          </Button>
+          <Button color="inherit" onClick={logOut}>
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
     </Box>

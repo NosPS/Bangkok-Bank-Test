@@ -52,8 +52,9 @@ button:hover {
 
 #main-layout {
   width: 100vw;
-  height: 100vh;
-  background-image: url("/public/images/bg.jpg");
+  min-height: 100vh;
+  height: fit-content;
+  background-image: url("/images/bg.jpg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -72,9 +73,36 @@ button:hover {
   border-top-left-radius: 15px;
   background-color: #ffffff;
   width: 95%;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .icon-drawer-button {
   margin-left: 2rem;
   margin-right: 2rem;
+}
+
+.main-content-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-height: 90%;
+}
+
+h3 {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+h4 {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+p {
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
