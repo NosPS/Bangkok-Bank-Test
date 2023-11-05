@@ -49,4 +49,4 @@ COPY --chown=node:node --from=build /app/dist ./dist
 COPY --chown=node:node --from=build /app/.env .
 COPY --chown=node:node --from=build /app/prisma ./prisma
 
-CMD [ "npm", "run", "start:prod" ]
+CMD [ "npm", "run", "migrate:init", "&&", "npm", "run", "start:prod" ]

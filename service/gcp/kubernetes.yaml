@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    sandbox.service: service
+  name: service
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      sandbox.service: service
+  template:
+    metadata:
+      labels:
+        sandbox.service: service
+    spec:
+      containers:
+        - name: service
+          image: gcr.io/bangkok-bank-test/service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: service-secret
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: 300m
+            requests:
+              memory: 128Mi
+              cpu: 100m
+        - name: cloud-sql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.17
+          imagePullPolicy: Always
+          command:
+            - /cloud_sql_proxy
+            - --dir=/cloudsql
+            - -instances=bangkok-bank-test:asia-southeast1:database=tcp:5432
+            - -credential_file=/secrets/key.json
+          securityContext:
+            runAsNonRoot: true
+          volumeMounts:
+            - name: cloudsql-credential
+              mountPath: /secrets
+              readOnly: true
+            - name: cloudsql
+              mountPath: /cloudsql
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 50m
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      volumes:
+        - name: cloudsql-credential
+          secret:
+            secretName: cloudsql-instance-credential
+        - name: cloudsql
+          emptyDir:
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+  labels:
+    sandbox.service: service
+  annotations:
+    cloud.google.com/backend-config: '{"default": "backend-config"}'
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  type: NodePort
+  selector:
+    sandbox.service: service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP
