@@ -1,26 +1,31 @@
 import {
+  setSuccess,
   setError,
   setPending,
-  setSuccess,
 } from "../features/global.slice";
 import ErrorModel from "../models/error.model";
 import axios from "axios";
 import { TDispatch } from "../models/dispatch.type";
+import CreatePostModel from "../models/create-post.model";
 import SuccessModel from "../models/success.model";
 
-export default async function LoginApi(dispatch: TDispatch) {
+export default async function CreatePostApi(
+  data: CreatePostModel,
+  dispatch: TDispatch
+) {
   try {
     dispatch(setPending());
-    const res = await axios.post(`/api/auth/login`);
-
-    localStorage.setItem("accessToken", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
-
+    const accessToken = localStorage.getItem("accessToken");
+    const res = await axios.post(`/api/posts/`, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     dispatch(
       setSuccess(
         new SuccessModel({
           status: true,
-          message: "Login success",
+          message: res.data.message,
         })
       )
     );

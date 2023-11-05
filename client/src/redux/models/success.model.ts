@@ -3,7 +3,7 @@ type Props = {
   message: string;
 };
 
-class ErrorModel {
+class SuccessModel {
   status: boolean;
   message: string;
 
@@ -13,4 +13,4 @@ class ErrorModel {
   }
 }
 
-export default ErrorModel;
+export default SuccessModel;

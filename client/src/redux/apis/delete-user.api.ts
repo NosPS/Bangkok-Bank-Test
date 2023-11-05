@@ -8,19 +8,21 @@ import axios from "axios";
 import { TDispatch } from "../models/dispatch.type";
 import SuccessModel from "../models/success.model";
 
-export default async function LoginApi(dispatch: TDispatch) {
+export default async function DeleteUserApi(id: number, dispatch: TDispatch) {
   try {
     dispatch(setPending());
-    const res = await axios.post(`/api/auth/login`);
-
-    localStorage.setItem("accessToken", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
+    const accessToken = localStorage.getItem("accessToken");
+    const res = await axios.delete(`/api/users/${id}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     dispatch(
       setSuccess(
         new SuccessModel({
           status: true,
-          message: "Login success",
+          message: res.data.message,
         })
       )
     );

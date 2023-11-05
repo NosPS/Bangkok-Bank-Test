@@ -1,35 +1,78 @@
 import { createSlice } from "@reduxjs/toolkit";
+import UserModel from "../models/user.model";
+import PostModel from "../models/post.model";
+import ErrorModel from "../models/error.model";
+import SuccessModel from "../models/success.model";
+import { PaginationModel } from "../models/pagination.model";
 
 export interface GlobalState {
   isLoading: boolean;
-  isOpenModal: boolean;
+  isOpenDialog: boolean;
+  isOpenCreate: boolean;
+  isOpenDrawer: boolean;
   data: {
-    accessToken: string;
+    user: UserModel;
+    usersList: UserModel[];
+    post: PostModel;
+    postsList: PostModel[];
   };
-  error: {
-    status: boolean;
-    message: string;
-    to: string;
-  };
-  page: number;
-  pageSize: number;
-  pageCount: number;
+  success: SuccessModel;
+  error: ErrorModel;
+  pagination: PaginationModel;
+  rowCount: number;
 }
 
 const initialState: GlobalState = {
   isLoading: false,
-  isOpenModal: false,
+  isOpenDialog: false,
+  isOpenCreate: false,
+  isOpenDrawer: false,
   data: {
-    accessToken: "",
+    user: {
+      id: 0,
+      name: "",
+      username: "",
+      email: "",
+      address: {
+        street: "",
+        suite: "",
+        city: "",
+        zipcode: "",
+        geo: {
+          lat: "",
+          lng: "",
+        },
+      },
+      phone: "",
+      website: "",
+      company: {
+        name: "",
+        catchPhrase: "",
+        bs: "",
+      },
+    },
+    usersList: [],
+    post: {
+      id: 0,
+      userId: 0,
+      title: "",
+      body: "",
+    },
+    postsList: [],
+  },
+  success: {
+    status: false,
+    message: "",
   },
   error: {
     status: false,
     message: "",
-    to: "",
   },
-  page: 1,
-  pageSize: 10,
-  pageCount: 1,
+  pagination: {
+    pageSize: 25,
+    page: 0,
+  },
+  rowCount: 1,
 };
 
 export const slice = createSlice({
@@ -42,24 +85,40 @@ export const slice = createSlice({
     setComplete(state) {
       state.isLoading = false;
     },
-    setIsOpenModal(state, action) {
-      state.isOpenModal = action.payload;
+    setIsOpenDialog(state, action) {
+      state.isOpenDialog = action.payload;
+    },
+    setIsOpenCreate(state, action) {
+      state.isOpenCreate = action.payload;
+    },
+    setIsOpenDrawer(state, action) {
+      state.isOpenDrawer = action.payload;
+    },
+    setSuccess(state, action) {
+      state.success = action.payload;
+      state.isLoading = false;
     },
     setError(state, action) {
       state.error = action.payload;
       state.isLoading = false;
     },
-    setPage(state, action) {
-      state.page = action.payload;
+    setPagination(state, action) {
+      state.pagination = action.payload;
     },
-    setPageSize(state, action) {
-      state.pageSize = action.payload;
+    setRowCount(state, action) {
+      state.rowCount = action.payload;
     },
-    setPageCount(state, action) {
-      state.pageCount = action.payload;
+    setUser(state, action) {
+      state.data.user = action.payload;
     },
-    setAccessToken(state, action) {
-      state.data.accessToken = action.payload;
+    setUsersList(state, action) {
+      state.data.usersList = action.payload;
+    },
+    setPost(state, action) {
+      state.data.post = action.payload;
+    },
+    setPostsList(state, action) {
+      state.data.postsList = action.payload;
     },
   },
 });
@@ -67,12 +126,17 @@ export const slice = createSlice({
 export const {
   setPending,
   setComplete,
-  setIsOpenModal,
+  setIsOpenDialog,
+  setIsOpenCreate,
+  setIsOpenDrawer,
+  setSuccess,
   setError,
-  setPage,
-  setPageSize,
-  setPageCount,
-  setAccessToken,
+  setPagination,
+  setRowCount,
+  setUser,
+  setUsersList,
+  setPost,
+  setPostsList,
 } = slice.actions;
 
 const globalReducer = slice.reducer;

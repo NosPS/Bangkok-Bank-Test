@@ -6,21 +6,28 @@ import {
 import ErrorModel from "../models/error.model";
 import axios from "axios";
 import { TDispatch } from "../models/dispatch.type";
+import CreateUserModel from "../models/create-user.model";
 import SuccessModel from "../models/success.model";
 
-export default async function LoginApi(dispatch: TDispatch) {
+export default async function CreateUserApi(
+  data: CreateUserModel,
+  dispatch: TDispatch
+) {
   try {
     dispatch(setPending());
-    const res = await axios.post(`/api/auth/login`);
+    const accessToken = localStorage.getItem("accessToken");
 
-    localStorage.setItem("accessToken", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
+    const res = await axios.post(`/api/users/`, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     dispatch(
       setSuccess(
         new SuccessModel({
           status: true,
-          message: "Login success",
+          message: res.data.message,
         })
       )
     );
