@@ -1,6 +1,11 @@
 import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Public } from 'src/middlewares/decorators/public.decorator';
 import { RefreshTokenGuard } from 'src/middlewares/guards/refresh_token.guard';
 
@@ -11,6 +16,9 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @ApiResponse({ status: 201, description: 'Success.' })
+  @ApiResponse({ status: 500, description: 'Something went wrong.' })
+  @ApiOperation({ summary: 'login' })
   signIn() {
     return this.authService.signIn();
   }
@@ -18,6 +26,10 @@ export class AuthController {
   @Public()
   @UseGuards(RefreshTokenGuard)
   @ApiBearerAuth()
+  @ApiResponse({ status: 201, description: 'Success.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 500, description: 'Something went wrong.' })
+  @ApiOperation({ summary: 'refresh token (use a refreshToken for authorization)' })
   @Post('refresh')
   refresh() {
     return this.authService.refresh();

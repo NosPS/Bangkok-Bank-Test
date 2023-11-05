@@ -21,9 +21,9 @@ import { PostsPersistenceService } from './persistence/posts-persistence.service
 
 @Injectable()
 export class PostsService {
-  private createdSuccessMesssage = 'Post created successfully';
-  private updatedSuccessMesssage = 'Post updated successfully';
-  private deletedSuccessMesssage = 'Post deleted successfully';
+  private createdSuccessMesssage = 'Post created success';
+  private updatedSuccessMesssage = 'Post updated success';
+  private deletedSuccessMesssage = 'Post deleted success';
   private notFoundMessage = 'Post not found';
   private userNotFoundMessage = 'User not found';
 
@@ -31,6 +31,14 @@ export class PostsService {
 
   async create(createPostDto: CreatePostDto): Promise<ResponsePresenter> {
     try {
+      const user = await this.postsPersistence.findUserById(
+        createPostDto.userId,
+      );
+
+      if (!user) {
+        throw new NotFoundException(this.userNotFoundMessage);
+      }
+
       await this.postsPersistence.create(createPostDto);
 
       const response = new ResponsePresenter({
@@ -44,34 +52,42 @@ export class PostsService {
   }
 
   async findAll(): Promise<PostPresenter[]> {
-    const posts: PostEntity[] = await this.postsPersistence.findAll();
+    try {
+      const posts: PostEntity[] = await this.postsPersistence.findAll();
 
-    const postsPresenter = PostMapping.mapToPresenterArray(posts);
-    return postsPresenter;
+      const postsPresenter = PostMapping.mapToPresenterArray(posts);
+      return postsPresenter;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
+    }
   }
 
   async findOne(id: number): Promise<PostPresenter> {
-    const post = await this.postsPersistence.findById(id);
+    try {
+      const post = await this.postsPersistence.findById(id);
 
-    if (!post) {
-      throw new NotFoundException(this.notFoundMessage);
+      if (!post) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
+      const postPresenter = PostMapping.mapToPresenter(post);
+      return postPresenter;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
     }
-
-    const postPresenter = PostMapping.mapToPresenter(post);
-    return postPresenter;
   }
 
   async update(
     id: number,
     updatePostDto: UpdatePostDto,
   ): Promise<ResponsePresenter> {
-    const post = await this.postsPersistence.findById(id);
-
-    if (!post) {
-      throw new NotFoundException(this.notFoundMessage);
-    }
-
     try {
+      const post = await this.postsPersistence.findById(id);
+
+      if (!post) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
       await this.postsPersistence.update(id, updatePostDto);
 
       const response = new ResponsePresenter({
@@ -88,13 +104,13 @@ export class PostsService {
     id: number,
     patchPostDto: PatchPostDto,
   ): Promise<ResponsePresenter> {
-    const post = await this.postsPersistence.findById(id);
-
-    if (!post) {
-      throw new NotFoundException(this.notFoundMessage);
-    }
-
     try {
+      const post = await this.postsPersistence.findById(id);
+
+      if (!post) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
       await this.postsPersistence.patch(id, patchPostDto, post);
 
       const response = new ResponsePresenter({
@@ -108,13 +124,13 @@ export class PostsService {
   }
 
   async remove(id: number): Promise<ResponsePresenter> {
-    const post = await this.postsPersistence.findById(id);
-
-    if (!post) {
-      throw new NotFoundException(this.notFoundMessage);
-    }
-
     try {
+      const post = await this.postsPersistence.findById(id);
+
+      if (!post) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
       await this.postsPersistence.delete(id);
 
       const response = new ResponsePresenter({
@@ -130,69 +146,89 @@ export class PostsService {
   async pagination(
     pageOptions: PageOptionsDto,
   ): Promise<PagePresenter<PostPresenter>> {
-    const posts: PostEntity[] = await this.postsPersistence.pagination(
-      pageOptions,
-    );
+    try {
+      const posts: PostEntity[] = await this.postsPersistence.pagination(
+        pageOptions,
+      );
 
-    const count = await this.postsPersistence.count();
+      const count = await this.postsPersistence.count();
 
-    const postsPresenter = PostMapping.mapToPresenterArray(posts);
+      const postsPresenter = PostMapping.mapToPresenterArray(posts);
 
-    let pageMeta = new PageMetaPresenter(count, pageOptions);
-    let page = new PagePresenter(postsPresenter, pageMeta);
+      let pageMeta = new PageMetaPresenter(count, pageOptions);
+      let page = new PagePresenter(postsPresenter, pageMeta);
 
-    return page;
+      return page;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
+    }
   }
 
   async findAllByUserId(userId: number): Promise<PostPresenter[]> {
-    const user = await this.postsPersistence.findUserById(userId);
+    try {
+      const user = await this.postsPersistence.findUserById(userId);
 
-    if (!user) {
-      throw new NotFoundException(this.userNotFoundMessage);
+      if (!user) {
+        throw new NotFoundException(this.userNotFoundMessage);
+      }
+
+      const posts = await this.postsPersistence.findAllByUserId(user.id);
+      const postsPresenter = PostMapping.mapToPresenterArray(posts);
+      return postsPresenter;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
     }
-
-    const posts = await this.postsPersistence.findAllByUserId(user.id);
-    const postsPresenter = PostMapping.mapToPresenterArray(posts);
-    return postsPresenter;
   }
 
   async paginationByUserId(
     pageOptions: PageOptionsDto,
     userId: number,
   ): Promise<PagePresenter<PostPresenter>> {
-    const user = await this.postsPersistence.findUserById(userId);
+    try {
+      const user = await this.postsPersistence.findUserById(userId);
 
-    if (!user) {
-      throw new NotFoundException(this.userNotFoundMessage);
+      if (!user) {
+        throw new NotFoundException(this.userNotFoundMessage);
+      }
+
+      const posts = await this.postsPersistence.findAllByUserId(user.id);
+
+      const count = posts.length;
+
+      const postsSlice = posts.slice(
+        (pageOptions.page - 1) * pageOptions.pageSize,
+        (pageOptions.page - 1) * pageOptions.pageSize + pageOptions.pageSize,
+      );
+
+      const postsPresenter = PostMapping.mapToPresenterArray(postsSlice);
+
+      let pageMeta = new PageMetaPresenter(count, pageOptions);
+      let page = new PagePresenter(postsPresenter, pageMeta);
+
+      return page;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
     }
-
-    const posts = await this.postsPersistence.findAllByUserId(user.id);
-
-    const count = posts.length;
-
-    const postsSlice = posts.slice(
-      (pageOptions.page - 1) * pageOptions.pageSize,
-      (pageOptions.page - 1) * pageOptions.pageSize + pageOptions.pageSize,
-    );
-
-    const postsPresenter = PostMapping.mapToPresenterArray(postsSlice);
-
-    let pageMeta = new PageMetaPresenter(count, pageOptions);
-    let page = new PagePresenter(postsPresenter, pageMeta);
-
-    return page;
   }
 
   async findUserById(id: number): Promise<UserPresenter> {
-    const post = await this.postsPersistence.findById(id);
+    try {
+      const post = await this.postsPersistence.findById(id);
 
-    if (!post) {
-      throw new NotFoundException(this.notFoundMessage);
+      if (!post) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
+      const user = await this.postsPersistence.findUserById(post.userId);
+
+      if (!user) {
+        throw new NotFoundException(this.userNotFoundMessage);
+      }
+
+      const userPresenter = UserMapping.mapToPresenter(user);
+      return userPresenter;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
     }
-
-    const user = await this.postsPersistence.findUserById(post.userId);
-
-    const userPresenter = UserMapping.mapToPresenter(user);
-    return userPresenter;
   }
 }

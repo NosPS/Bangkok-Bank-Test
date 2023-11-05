@@ -21,9 +21,9 @@ import { UsersPersistenceService } from './persistence/users-persistence.service
 
 @Injectable()
 export class UsersService {
-  private createdSuccessMesssage = 'User created successfully';
-  private updatedSuccessMesssage = 'User updated successfully';
-  private deletedSuccessMesssage = 'User deleted successfully';
+  private createdSuccessMesssage = 'User created success';
+  private updatedSuccessMesssage = 'User updated success';
+  private deletedSuccessMesssage = 'User deleted success';
   private notFoundMessage = 'User not found';
 
   constructor(private usersPersistence: UsersPersistenceService) {}
@@ -43,34 +43,42 @@ export class UsersService {
   }
 
   async findAll(): Promise<UserPresenter[]> {
-    const users: UserEntity[] = await this.usersPersistence.findAll();
+    try {
+      const users: UserEntity[] = await this.usersPersistence.findAll();
 
-    const usersPresenter = UserMapping.mapToPresenterArray(users);
-    return usersPresenter;
+      const usersPresenter = UserMapping.mapToPresenterArray(users);
+      return usersPresenter;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
+    }
   }
 
   async findOne(id: number): Promise<UserPresenter> {
-    const user = await this.usersPersistence.findById(id);
+    try {
+      const user = await this.usersPersistence.findById(id);
 
-    if (!user) {
-      throw new NotFoundException(this.notFoundMessage);
+      if (!user) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
+      const userPresenter = UserMapping.mapToPresenter(user);
+      return userPresenter;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
     }
-
-    const userPresenter = UserMapping.mapToPresenter(user);
-    return userPresenter;
   }
 
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<ResponsePresenter> {
-    const user = await this.usersPersistence.findById(id);
-
-    if (!user) {
-      throw new NotFoundException(this.notFoundMessage);
-    }
-
     try {
+      const user = await this.usersPersistence.findById(id);
+
+      if (!user) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
       await this.usersPersistence.update(id, updateUserDto);
 
       const response = new ResponsePresenter({
@@ -87,13 +95,13 @@ export class UsersService {
     id: number,
     patchUserDto: PatchUserDto,
   ): Promise<ResponsePresenter> {
-    const user = await this.usersPersistence.findById(id);
-
-    if (!user) {
-      throw new NotFoundException(this.notFoundMessage);
-    }
-
     try {
+      const user = await this.usersPersistence.findById(id);
+
+      if (!user) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
       await this.usersPersistence.patch(id, patchUserDto, user);
 
       const response = new ResponsePresenter({
@@ -107,13 +115,13 @@ export class UsersService {
   }
 
   async remove(id: number): Promise<ResponsePresenter> {
-    const user = await this.usersPersistence.findById(id);
-
-    if (!user) {
-      throw new NotFoundException(this.notFoundMessage);
-    }
-
     try {
+      const user = await this.usersPersistence.findById(id);
+
+      if (!user) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
       if (user.address.geo) {
         await this.usersPersistence.deleteGeo(user.address.id);
       }
@@ -125,6 +133,8 @@ export class UsersService {
       if (user.company) {
         await this.usersPersistence.deleteCompany(user.id);
       }
+
+      await this.usersPersistence.deletePosts(user.id);
 
       await this.usersPersistence.delete(user.id);
 
@@ -141,28 +151,36 @@ export class UsersService {
   async pagination(
     pageOptions: PageOptionsDto,
   ): Promise<PagePresenter<UserPresenter>> {
-    const users = await this.usersPersistence.pagination(pageOptions);
+    try {
+      const users = await this.usersPersistence.pagination(pageOptions);
 
-    const count = await this.usersPersistence.count();
+      const count = await this.usersPersistence.count();
 
-    const usersPresenter = UserMapping.mapToPresenterArray(users);
+      const usersPresenter = UserMapping.mapToPresenterArray(users);
 
-    let pageMeta = new PageMetaPresenter(count, pageOptions);
-    let page = new PagePresenter(usersPresenter, pageMeta);
+      let pageMeta = new PageMetaPresenter(count, pageOptions);
+      let page = new PagePresenter(usersPresenter, pageMeta);
 
-    return page;
+      return page;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
+    }
   }
 
   async findAllPostsById(id: number): Promise<PostPresenter[]> {
-    const user = await this.usersPersistence.findById(id);
+    try {
+      const user = await this.usersPersistence.findById(id);
 
-    if (!user) {
-      throw new NotFoundException(this.notFoundMessage);
+      if (!user) {
+        throw new NotFoundException(this.notFoundMessage);
+      }
+
+      const posts = await this.usersPersistence.findAllPostsById(user.id);
+
+      const postsPresenter = PostMapping.mapToPresenterArray(posts);
+      return postsPresenter;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
     }
-
-    const posts = await this.usersPersistence.findAllPostsById(user.id);
-
-    const postsPresenter = PostMapping.mapToPresenterArray(posts);
-    return postsPresenter;
   }
 }

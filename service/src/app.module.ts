@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './middlewares/guards/access_token.guard';
 import { JwtModule } from '@nestjs/jwt';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { JwtModule } from '@nestjs/jwt';
     PostsModule,
     AuthModule,
   ],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,

@@ -21,7 +21,11 @@ export class PostsPersistenceService {
   }
 
   findAll() {
-    return this.prisma.posts.findMany();
+    return this.prisma.posts.findMany({
+      orderBy: {
+        id: 'asc',
+      },
+    });
   }
 
   findById(id: number) {
@@ -68,6 +72,9 @@ export class PostsPersistenceService {
     return this.prisma.posts.findMany({
       skip: (pageOptions.page - 1) * pageOptions.pageSize,
       take: +pageOptions.pageSize,
+      orderBy: {
+        id: 'asc',
+      },
     });
   }
 
@@ -79,6 +86,9 @@ export class PostsPersistenceService {
     return this.prisma.posts.findMany({
       where: {
         userId,
+      },
+      orderBy: {
+        id: 'asc',
       },
     });
   }

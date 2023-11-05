@@ -1,30 +1,39 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TokenResponsePresenter } from 'src/models/presenters/token-response.presenter';
+import { GetErrorMessage } from 'src/utils/get-error-message.util';
 
 @Injectable()
 export class AuthService {
   constructor(private jwtService: JwtService) {}
   async signIn(): Promise<TokenResponsePresenter> {
-    const accessToken = await this.createAccessToken();
-    const refreshToken = await this.createRefreshToken();
-    const tokenResponse = new TokenResponsePresenter({
-      accessToken,
-      refreshToken,
-    });
+    try {
+      const accessToken = await this.createAccessToken();
+      const refreshToken = await this.createRefreshToken();
+      const tokenResponse = new TokenResponsePresenter({
+        accessToken,
+        refreshToken,
+      });
 
-    return tokenResponse;
+      return tokenResponse;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
+    }
   }
 
   async refresh(): Promise<TokenResponsePresenter> {
-    const accessToken = await this.createAccessToken();
-    const refreshToken = await this.createRefreshToken();
-    const tokenResponse = new TokenResponsePresenter({
-      accessToken,
-      refreshToken,
-    });
+    try {
+      const accessToken = await this.createAccessToken();
+      const refreshToken = await this.createRefreshToken();
+      const tokenResponse = new TokenResponsePresenter({
+        accessToken,
+        refreshToken,
+      });
 
-    return tokenResponse;
+      return tokenResponse;
+    } catch (error) {
+      throw new InternalServerErrorException(GetErrorMessage(error));
+    }
   }
 
   private async createAccessToken() {

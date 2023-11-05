@@ -53,6 +53,9 @@ export class UsersPersistenceService {
         },
         company: true,
       },
+      orderBy: {
+        id: 'asc',
+      },
     });
   }
 
@@ -198,6 +201,14 @@ export class UsersPersistenceService {
     });
   }
 
+  deletePosts(userId: number) {
+    return this.prisma.posts.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+
   pagination(pageOptions: PageOptionsDto) {
     return this.prisma.users.findMany({
       skip: (pageOptions.page - 1) * pageOptions.pageSize,
@@ -210,6 +221,9 @@ export class UsersPersistenceService {
         },
         company: true,
       },
+      orderBy: {
+        id: 'asc',
+      },
     });
   }
 
@@ -221,6 +235,9 @@ export class UsersPersistenceService {
     return this.prisma.posts.findMany({
       where: {
         userId,
+      },
+      orderBy: {
+        id: 'asc',
       },
     });
   }
